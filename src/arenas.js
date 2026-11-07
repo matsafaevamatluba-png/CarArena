@@ -1,0 +1,50 @@
+// arenas.js — темы арен. Размер у всех одинаковый, меняется только оформление.
+// sky: [верх, середина, горизонт, низ]; fog — цвет тумана на горизонте; dust — цвет пыли из-под колёс.
+
+export const ARENAS = [
+  {
+    id: 'halloween', name: 'Хэллоуин', emoji: '🎃',
+    bg: ['#3b2a5a', '#7a4a8c'],
+    sky: ['#1b1038', '#5a2c75', '#d4702f', '#2a1740'],
+    fog: '#7a3f62',
+    hemi: [0xd6c4ff, 0x7a3d2a, 1.0],
+    sun: [0xffc58a, 2.2],
+    wall: ['#ff8a1f', '#3a2350'],
+    rim: 0xff8a1f,
+    dust: [0.75, 0.55, 0.9],
+  },
+  {
+    id: 'christmas', name: 'Новый год', emoji: '🎄',
+    bg: ['#9fcff3', '#eaf6ff'],
+    sky: ['#355a9a', '#8fbbea', '#eaf4ff', '#b8d4f0'],
+    fog: '#dbeaf8',
+    hemi: [0xffffff, 0x9fb8d6, 1.0],
+    sun: [0xfff1dc, 2.4],
+    wall: ['#d8262f', '#ffffff'],
+    rim: 0xffffff,
+    snow: true,
+    dust: [1, 1, 1],
+  },
+  {
+    id: 'desert', name: 'Пустыня', emoji: '🌵',
+    bg: ['#7ec8f2', '#ffe2a8'],
+    sky: ['#3f93e0', '#9ccff4', '#ffe6b0', '#e8c98a'],
+    fog: '#f1d9a4',
+    hemi: [0xfff2d0, 0xb98a4a, 1.0],
+    sun: [0xfff0c0, 2.8],
+    wall: ['#f2c14e', '#9b5d2a'],
+    rim: 0xffb02e,
+    dust: [0.93, 0.8, 0.52],
+  },
+  {
+    id: 'sky', name: 'Небо', emoji: '☁️',
+    bg: ['#4aa8ff', '#cfeaff'],
+    sky: ['#2a7de0', '#7dbfff', '#eaf6ff', '#cfe6ff'],
+    fog: '#d6ebff',
+    hemi: [0xffffff, 0xa9c8ff, 1.1],
+    sun: [0xffffff, 2.2],
+    wall: ['#ffffff', '#6fb4ff'],
+    rim: 0x7dd3fc,
+    dust: [1, 1, 1],
+  },
+];
