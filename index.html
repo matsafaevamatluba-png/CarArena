@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#0f1220" />
+<title>Arena Cars</title>
+<style>
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; -webkit-user-select: none; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: #0f1220; color: #fff;
+    font: 600 16px/1.25 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; touch-action: none; }
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  .screen { position: fixed; inset: 0; display: none; padding: max(14px, env(safe-area-inset-top)) max(18px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(18px, env(safe-area-inset-left)); }
+  .screen.on { display: flex; }
+  .dim { background: radial-gradient(ellipse at 50% 30%, #2a2f5a 0%, #0f1220 75%); }
+  .col { flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
+  h1 { margin: 0; font-size: 38px; letter-spacing: 1px; }
+  h2 { margin: 0; font-size: 24px; }
+  .sub { opacity: .7; font-size: 14px; }
+  button { font: inherit; color: #fff; border: 0; border-radius: 14px; padding: 12px 22px; background: #3b82f6; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+  button:active { transform: translateY(2px); box-shadow: 0 2px 0 rgba(0,0,0,.35); }
+  button.green { background: #22a559; } button.red { background: #d9453f; } button.gray { background: #475069; } button.gold { background: #e0a21b; color: #2a1c00; }
+  button:disabled { opacity: .45; }
+  input[type=text] { font: inherit; padding: 12px 14px; border-radius: 12px; border: 2px solid #475069; background: #1a1f38; color: #fff; width: 240px; text-align: center; outline: none; }
+  input[type=text]:focus { border-color: #3b82f6; }
+  .topbar { position: absolute; top: max(10px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); right: max(14px, env(safe-area-inset-right)); display: flex; justify-content: space-between; align-items: center; gap: 10px; }
+  .chip { background: rgba(20,24,48,.8); border-radius: 14px; padding: 8px 14px; display: flex; align-items: center; gap: 8px; }
+  .bar { width: 120px; height: 8px; border-radius: 4px; background: #2b3156; overflow: hidden; margin-top: 3px; }
+  .bar > i { display: block; height: 100%; background: #4ade80; }
+  .row { display: flex; gap: 12px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .arena { width: 250px; height: 92px; border-radius: 16px; display: flex; align-items: center; justify-content: center; font-size: 22px; gap: 10px; border: 3px solid rgba(255,255,255,.35); text-shadow: 0 2px 4px rgba(0,0,0,.5); }
+  #garageList { display: flex; gap: 12px; overflow-x: auto; padding: 6px 4px 10px; width: 100%; touch-action: pan-x; }
+  .card { flex: 0 0 168px; background: #1a1f38; border-radius: 16px; padding: 10px; display: flex; flex-direction: column; gap: 6px; border: 3px solid transparent; text-align: left; }
+  .card.sel { border-color: #4ade80; }
+  .card .pic { height: 54px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+  .stat { display: flex; align-items: center; gap: 6px; font-size: 11px; opacity: .85; }
+  .stat .bar { width: 80px; margin: 0; height: 6px; } .stat span { width: 40px; }
+  .rar-common { color: #b6bfd6; } .rar-rare { color: #5aa9ff; } .rar-epic { color: #c084fc; } .rar-legendary { color: #fbbf24; }
+  #garage, #settings { flex-direction: column; align-items: stretch; gap: 8px; padding-top: 64px; }
+  .set { background: #1a1f38; border-radius: 14px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; gap: 14px; }
+  input[type=range] { width: 200px; }
+
+  /* HUD */
+  #hud { pointer-events: none; padding: 0; }
+  #hud > * { pointer-events: none; }
+  #zone { position: absolute; top: 0; bottom: 0; width: 55%; pointer-events: auto; touch-action: none; }
+  #hud.L #zone { left: 0; } #hud.R #zone { right: 0; }
+  #stickBase { position: absolute; width: 130px; height: 130px; margin: -65px 0 0 -65px; border-radius: 50%; background: rgba(255,255,255,.14); border: 3px solid rgba(255,255,255,.35); display: none; }
+  #stickThumb { position: absolute; width: 58px; height: 58px; left: 36px; top: 36px; border-radius: 50%; background: rgba(255,255,255,.55); }
+  #abil { position: absolute; bottom: max(26px, env(safe-area-inset-bottom)); width: calc(104px * var(--s,1)); height: calc(104px * var(--s,1)); border-radius: 50%; pointer-events: auto; font-size: calc(46px * var(--s,1)); display: flex; align-items: center; justify-content: center; background: rgba(0,0,0,.35); border: 4px solid rgba(255,255,255,.45); touch-action: none; }
+  #abil.has { background: rgba(59,130,246,.7); border-color: #fff; animation: pulse 1s infinite; }
+  #hud.L #abil { right: max(34px, env(safe-area-inset-right)); } #hud.R #abil { left: max(34px, env(safe-area-inset-left)); }
+  @keyframes pulse { 50% { transform: scale(1.07); } }
+  #alive { position: absolute; top: max(10px, env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); background: rgba(20,24,48,.7); padding: 6px 16px; border-radius: 14px; font-size: 18px; }
+  #pause { position: absolute; top: max(10px, env(safe-area-inset-top)); right: max(14px, env(safe-area-inset-right)); width: 48px; height: 48px; padding: 0; pointer-events: auto; background: rgba(20,24,48,.7); box-shadow: none; font-size: 20px; }
+  #big { position: absolute; left: 0; right: 0; top: 22%; text-align: center; font-size: 84px; font-weight: 900; text-shadow: 0 4px 12px rgba(0,0,0,.6); }
+  #spec { position: absolute; left: 0; right: 0; bottom: max(18px, env(safe-area-inset-bottom)); display: none; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  #spec button { pointer-events: auto; }
+  #toast { position: fixed; top: 16%; left: 50%; transform: translateX(-50%); background: rgba(20,24,48,.92); border-radius: 14px; padding: 10px 18px; display: none; z-index: 9; }
+  #tags { position: absolute; inset: 0; overflow: hidden; }
+  .tag { position: absolute; left: 0; top: 0; width: 96px; margin-left: -48px; text-align: center; font-size: 13px; text-shadow: 0 1px 3px #000; will-change: transform; }
+  .tag .tb { height: 7px; border-radius: 4px; background: rgba(0,0,0,.55); border: 1px solid rgba(255,255,255,.5); overflow: hidden; margin-top: 2px; }
+  .tag .tb i { display: block; height: 100%; }
+  #flash { position: absolute; inset: 0; background: radial-gradient(ellipse at center, rgba(255,0,0,0) 45%, rgba(255,30,30,.75) 100%); opacity: 0; transition: opacity .35s; }
+  #flash.on { opacity: 1; transition: none; }
+  #hp { position: absolute; top: max(10px, env(safe-area-inset-top)); left: max(14px, env(safe-area-inset-left)); width: 210px; background: rgba(20,24,48,.72); border-radius: 14px; padding: 6px 12px 9px; }
+  #hpTxt { font-size: 15px; margin-bottom: 4px; display: flex; justify-content: space-between; }
+  #hpBar { height: 14px; border-radius: 7px; background: rgba(0,0,0,.5); border: 2px solid rgba(255,255,255,.55); overflow: hidden; }
+  #hpFill { display: block; height: 100%; width: 100%; background: #4ade80; transition: width .15s, background .2s; }
+  #radar { position: absolute; top: calc(max(10px, env(safe-area-inset-top)) + 58px); right: max(14px, env(safe-area-inset-right)); width: 130px; height: 130px; opacity: .92; }
+  #result { background: rgba(8,10,24,.78); }
+  .coin { color: #fbbf24; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+
+<div id="name" class="screen dim col on">
+  <h1>🚗 Arena Cars</h1>
+  <div class="sub">Выбей соперников с арены в лаву!</div>
+  <input id="nameIn" type="text" maxlength="14" placeholder="Твой ник" autocomplete="off" />
+  <button id="nameOk" class="green">Продолжить</button>
+</div>
+
+<div id="menu" class="screen dim col">
+  <div class="topbar">
+    <div class="chip"><div>👤 <b id="mName"></b><div class="bar"><i id="mXp"></i></div></div><div>Ур. <b id="mLvl"></b></div></div>
+    <div class="chip">🪙 <b class="coin" id="mCoins"></b></div>
+  </div>
+  <h1>🚗 Arena Cars</h1>
+  <div class="row">
+    <button id="aPrev" class="gray">◀</button>
+    <div class="arena" id="aCard"></div>
+    <button id="aNext" class="gray">▶</button>
+  </div>
+  <div class="row">
+    <button id="bPlay" class="green" style="font-size:22px;padding:14px 40px">▶ Играть</button>
+    <button id="bGarage">🚘 Гараж</button>
+    <button id="bSet" class="gray">⚙ Настройки</button>
+  </div>
+  <div class="sub">Победа: +20 🪙 и +50 опыта · Поражение: +5 🪙 и −5 опыта</div>
+</div>
+
+<div id="garage" class="screen dim">
+  <div class="topbar"><button id="gBack" class="gray">← Назад</button><div class="chip">🪙 <b class="coin" id="gCoins"></b></div></div>
+  <div id="garageList"></div>
+</div>
+
+<div id="settings" class="screen dim">
+  <div class="topbar"><button id="sBack" class="gray">← Назад</button><h2>Настройки</h2><div style="width:100px"></div></div>
+  <div class="set"><span>🔊 Звук</span><input id="sVol" type="range" min="0" max="100" /></div>
+  <div class="set"><span>🕹 Джойстик</span><div class="row"><button id="sLeft">Слева</button><button id="sRight">Справа</button></div></div>
+  <div class="set"><span>🔘 Размер кнопки</span><input id="sBtn" type="range" min="70" max="140" /></div>
+  <div class="set"><span>✏ Ник</span><input id="sName" type="text" maxlength="14" style="width:180px;padding:8px" /></div>
+  <div class="row"><button id="sSave" class="green" style="font-size:20px;padding:12px 50px">Сохранить</button></div>
+</div>
+
+<div id="hud" class="screen L">
+  <div id="zone"><div id="stickBase"><div id="stickThumb"></div></div></div>
+  <div id="tags"></div>
+  <div id="flash"></div>
+  <div id="hp"><div id="hpTxt"></div><div id="hpBar"><i id="hpFill"></i></div></div>
+  <div id="alive"></div>
+  <button id="pause">✕</button>
+  <canvas id="radar" width="260" height="260"></canvas>
+  <div id="abil"></div>
+  <div id="big"></div>
+  <div id="spec"><div id="specTxt" style="font-size:20px;text-shadow:0 2px 6px #000"></div><div class="row"><button id="specNext" class="gray">👁 Следующий</button><button id="specExit" class="red"></button></div></div>
+</div>
+
+<div id="result" class="screen col">
+  <h1 id="rTitle"></h1>
+  <div id="rInfo" style="font-size:20px;line-height:1.6"></div>
+  <div class="row"><button id="rAgain" class="green" style="font-size:20px">▶ Ещё раз</button><button id="rMenu" class="gray">В меню</button></div>
+</div>
+
+<div id="toast"></div>
+<script type="module" src="/src/main.js"></script>
+</body>
+</html>
